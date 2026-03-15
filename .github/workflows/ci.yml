@@ -65,7 +65,7 @@ jobs:
 
       - name: Build container image with Buildah
         run: |
-          buildah bud -t sample-quarkus-hummingbird:latest .
+          buildah bud -f Containerfile -t sample-quarkus-hummingbird:latest .
 
       - name: Inspect image
         run: |
@@ -111,7 +111,7 @@ jobs:
 
       - name: Build container image for scanning
         run: |
-          docker build -t sample-quarkus-hummingbird:scan .
+          docker build -f Containerfile -t sample-quarkus-hummingbird:scan .
 
       - name: Install Syft
         run: |
