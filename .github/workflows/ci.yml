@@ -44,7 +44,7 @@ jobs:
           fi
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: quarkus-app
           path: target/quarkus-app/
@@ -95,7 +95,7 @@ jobs:
           fi
 
       - name: Upload image config
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-config
           path: image-config.json
@@ -154,7 +154,7 @@ jobs:
           fi
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: |
@@ -163,7 +163,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Grype report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: grype-report
