@@ -131,27 +131,28 @@ jobs:
           grype version
 
       - name: Scan with Grype
-        continue-on-error: true
         run: |
-          grype sample-quarkus-hummingbird:scan --output table --output json --file grype-report.json
+          grype sample-quarkus-hummingbird:scan --output table --output json --file grype-report.json || true
 
-          # Count vulnerabilities by severity
           CRITICAL=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
           HIGH=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
           MEDIUM=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
           LOW=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "Low")] | length')
 
-          echo "📊 Vulnerability Summary:"
+          echo "Vulnerability Summary:"
           echo "  Critical: $CRITICAL"
-          echo "  High: $HIGH"
-          echo "  Medium: $MEDIUM"
-          echo "  Low: $LOW"
+          echo "  High:     $HIGH"
+          echo "  Medium:   $MEDIUM"
+          echo "  Low:      $LOW"
 
-          if [ "$CRITICAL" -eq 0 ] && [ "$HIGH" -eq 0 ]; then
-            echo "✅ No critical or high vulnerabilities found!"
-          else
-            echo "⚠️  Found $CRITICAL critical and $HIGH high severity vulnerabilities"
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo ""
+            echo "FAILED: $CRITICAL critical and $HIGH high severity vulnerabilities found."
+            echo "Update dependencies to resolve these before merging."
+            grype sample-quarkus-hummingbird:scan --only-fixed --fail-on high 2>/dev/null || true
+            exit 1
           fi
+          echo "No critical or high vulnerabilities found."
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v7
