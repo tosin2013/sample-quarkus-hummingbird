@@ -27,14 +27,14 @@ This application uses a multi-stage Containerfile pattern to separate build and 
 ```mermaid
 flowchart TB
     subgraph builder["Stage 1: Builder Image"]
-        B1[quay.io/hummingbird-hatchling/openjdk:21-builder]
+        B1[registry.access.redhat.com/hi/openjdk:21-builder]
         B2[Full UBI with JDK 21 + Maven]
         B3[Build with ./mvnw package]
         B4[Generate target/quarkus-app/]
     end
 
     subgraph runtime["Stage 2: Runtime Image"]
-        R1[quay.io/hummingbird-hatchling/openjdk:21-runtime]
+        R1[registry.access.redhat.com/hi/openjdk:21-runtime]
         R2[Distroless - No shell, No package manager]
         R3[JRE 21 only]
         R4[~185MB compressed]
@@ -183,8 +183,8 @@ curl http://localhost:8080/q/health
 - **Build Tool**: Maven 3.9.9
 - **Container Runtime**: Podman/Docker
 - **Base Images**:
-  - Builder: `quay.io/hummingbird-hatchling/openjdk:21-builder`
-  - Runtime: `quay.io/hummingbird-hatchling/openjdk:21-runtime`
+  - Builder: `registry.access.redhat.com/hi/openjdk:21-builder`
+  - Runtime: `registry.access.redhat.com/hi/openjdk:21-runtime`
 
 ### Quarkus Extensions
 - `quarkus-rest` - RESTEasy Reactive for REST endpoints
