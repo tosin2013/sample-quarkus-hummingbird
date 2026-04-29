@@ -1,5 +1,5 @@
-ARG BUILDER_IMAGE=quay.io/hummingbird-hatchling/openjdk:21-builder
-ARG RUNTIME_IMAGE=quay.io/hummingbird-hatchling/openjdk:21-runtime
+ARG BUILDER_IMAGE=registry.access.redhat.com/hi/openjdk:21-builder
+ARG RUNTIME_IMAGE=registry.access.redhat.com/hi/openjdk:21-runtime
 
 # Stage 1: Build the Quarkus application
 FROM ${BUILDER_IMAGE} AS builder
