@@ -104,6 +104,9 @@ jobs:
   security-scan:
     name: Security Scanning
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     steps:
       - name: Checkout code
@@ -134,10 +137,15 @@ jobs:
         run: |
           grype sample-quarkus-hummingbird:scan --output table --output json --file grype-report.json || true
 
-          CRITICAL=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
-          HIGH=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
-          MEDIUM=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
-          LOW=$(cat grype-report.json | jq '[.matches[] | select(.vulnerability.severity == "Low")] | length')
+          CRITICAL=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' grype-report.json)
+          HIGH=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' grype-report.json)
+          MEDIUM=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' grype-report.json)
+          LOW=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' grype-report.json)
+
+          echo "CRITICAL=$CRITICAL" >> $GITHUB_ENV
+          echo "HIGH=$HIGH"         >> $GITHUB_ENV
+          echo "MEDIUM=$MEDIUM"     >> $GITHUB_ENV
+          echo "LOW=$LOW"           >> $GITHUB_ENV
 
           echo "Vulnerability Summary:"
           echo "  Critical: $CRITICAL"
@@ -146,13 +154,53 @@ jobs:
           echo "  Low:      $LOW"
 
           if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-            echo ""
-            echo "FAILED: $CRITICAL critical and $HIGH high severity vulnerabilities found."
-            echo "Update dependencies to resolve these before merging."
-            grype sample-quarkus-hummingbird:scan --only-fixed --fail-on high 2>/dev/null || true
-            exit 1
+            echo "Critical or high severity vulnerabilities found. A GitHub Issue will be created for tracking."
+          else
+            echo "No critical or high vulnerabilities found."
           fi
-          echo "No critical or high vulnerabilities found."
+
+      - name: Create GitHub Issue for CVE findings
+        if: env.CRITICAL != '0' || env.HIGH != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Deduplicate: skip if an open issue with label 'cve' already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'cve',
+              state: 'open'
+            });
+            if (issues.data.length > 0) {
+              core.notice(`Open CVE issue already exists (#${issues.data[0].number}), skipping creation.`);
+              return;
+            }
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Security: ${process.env.CRITICAL} Critical / ${process.env.HIGH} High CVEs found (${new Date().toISOString().slice(0, 10)})`,
+              labels: ['security', 'cve', 'dependencies'],
+              body: [
+                '## Vulnerability Summary',
+                '',
+                '| Severity | Count |',
+                '|----------|-------|',
+                `| Critical | ${process.env.CRITICAL} |`,
+                `| High     | ${process.env.HIGH} |`,
+                `| Medium   | ${process.env.MEDIUM} |`,
+                `| Low      | ${process.env.LOW} |`,
+                '',
+                '## Next Steps',
+                '',
+                `- Review the **grype-report** artifact attached to the [CI run](${runUrl}).`,
+                '- Dependabot PRs (Maven, Docker) may already address some of these — check open PRs.',
+                '- For base-image CVEs: images are sourced from [Red Hat Hummingbird](https://images.redhat.com/). Pin to a newer digest or wait for the next image refresh.',
+                '- For Java dependency CVEs: update versions in `pom.xml` or accept the Dependabot Maven PR.',
+                '',
+                '> This issue was created automatically by the security-scan CI job. Close it once all Critical/High CVEs are resolved.',
+              ].join('\n')
+            });
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v7

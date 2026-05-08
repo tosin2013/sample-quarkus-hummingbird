@@ -35,3 +35,21 @@ updates:
       include: "scope"
     reviewers:
       - "tosin2013"
+
+  # Container base images (Containerfile)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "build(deps)"
+      include: "scope"
+    reviewers:
+      - "tosin2013"
