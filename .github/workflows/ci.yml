@@ -161,7 +161,7 @@ jobs:
 
       - name: Create GitHub Issue for CVE findings
         if: env.CRITICAL != '0' || env.HIGH != '0'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             // Deduplicate: skip if an open issue with label 'cve' already exists
