@@ -17,6 +17,12 @@ updates:
       include: "scope"
     reviewers:
       - "tosin2013"
+    ignore:
+      # Netty 4.2.x is incompatible with Quarkus 3.35.x (Vert.x 4.x requires Netty 4.1.x).
+      # The 4.1.x line is frozen at 4.1.133.Final. Re-evaluate when Quarkus officially
+      # supports Netty 4.2.x (expected with Vert.x 5.x / Quarkus 4.x).
+      - dependency-name: "io.netty:netty-bom"
+        versions: ["4.2.*"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
