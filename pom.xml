@@ -14,6 +14,7 @@
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>3.37.4</quarkus.platform.version>
     <netty.version>4.2.16.Final</netty.version>
+    <jackson.version>2.22.1</jackson.version>
     <surefire-plugin.version>3.5.6</surefire-plugin.version>
   </properties>
   <dependencyManagement>
@@ -23,6 +24,14 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-bom</artifactId>
         <version>${netty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Jackson BOM before Quarkus BOM — overrides Quarkus-managed Jackson version (fixes GHSA-r7wm-3cxj-wff9, GHSA-5gvw-p9qm-jgwh, GHSA-5jmj-h7xm-6q6v) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
